@@ -80,12 +80,24 @@ public class SelectorFragment extends Fragment {
                                 startActivity(Intent.createChooser(i, "Compartir"));
                                 break;
                             case 1: //Borrar
-                                vectorLibros.remove(id);
-                                adaptador.notifyDataSetChanged();
+                                Snackbar.make(v, "¿Estás seguro?", Snackbar.LENGTH_LONG)
+                                        .setAction("SI", new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View view) {
+                                                vectorLibros.remove(id);
+                                                adaptador.notifyDataSetChanged();
+                                            }
+                                        })
+                                        .show();
                                 break;
                             case 2: //Insertar
                                 vectorLibros.add(vectorLibros.elementAt(id));
                                 adaptador.notifyDataSetChanged();
+                                Snackbar.make(v, "Libro insertado", Snackbar.LENGTH_INDEFINITE).setAction("OK", new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                    }
+                                }).show();
                                 break;
                         }
                     }
