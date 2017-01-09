@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TabLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -28,6 +29,7 @@ import tk.elb4t.audiolibros_V2.fragments.SelectorFragment;
 public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private RecyclerView.LayoutManager layoutManager;
+    private AdaptadorLibrosFiltro adaptador;
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -40,6 +42,35 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        adaptador = ((Aplicacion) getApplicationContext()).getAdaptador();
+        //Pestañas
+        TabLayout tabs = (TabLayout) findViewById(R.id.tabs);
+        tabs.addTab(tabs.newTab().setText("Todos"));
+        tabs.addTab(tabs.newTab().setText("Nuevos"));
+        tabs.addTab(tabs.newTab().setText("Leidos"));
+        tabs.setTabMode(TabLayout.MODE_SCROLLABLE);
+        tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                switch (tab.getPosition()) {
+                    case 0: //Todos
+                         adaptador.setNovedad(false); adaptador.setLeido(false); break;
+                    case 1: //Nuevos
+                         adaptador.setNovedad(true); adaptador.setLeido(false); break;
+                    case 2: //Leidos
+                         adaptador.setNovedad(false); adaptador.setLeido(true); break;
+                }
+                adaptador.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+            }
+        });
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {

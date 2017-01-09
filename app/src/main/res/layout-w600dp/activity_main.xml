@@ -8,6 +8,7 @@
     tools:context="tk.elb4t.audiolibros_V2.MainActivity">
 
     <android.support.design.widget.AppBarLayout
+        android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:theme="@style/AppTheme.AppBarOverlay">
@@ -20,7 +21,13 @@
 
             android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"/>
-        <!-- app:popupTheme="@style/AppTheme.PopupOverlay" -->
+        <android.support.design.widget.TabLayout
+            android:id="@+id/tabs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:tabMode="scrollable"
+            app:layout_anchor="@id/appBarLayout"
+            />
 
     </android.support.design.widget.AppBarLayout>
 
