@@ -31,9 +31,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import tk.elb4t.audiolibros_V2.fragments.DetalleFragment;
 import tk.elb4t.audiolibros_V2.fragments.SelectorFragment;
 
-import static android.R.id.toggle;
-import static tk.elb4t.audiolibros_V2.R.id.appBarLayout;
-import static tk.elb4t.audiolibros_V2.R.id.tabs;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
