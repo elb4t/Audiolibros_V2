@@ -18,6 +18,7 @@ import java.io.IOException;
 
 import tk.elb4t.audiolibros_V2.Aplicacion;
 import tk.elb4t.audiolibros_V2.Libro;
+import tk.elb4t.audiolibros_V2.MainActivity;
 import tk.elb4t.audiolibros_V2.R;
 
 /**
@@ -97,6 +98,15 @@ public class DetalleFragment extends Fragment implements View.OnTouchListener, M
             Log.d("Audiolibros", "Error en mediaPlayer.stop()");
         }
         super.onStop();
+    }
+    @Override
+    public void onResume() {
+        DetalleFragment detalleFragment = (DetalleFragment)
+                getFragmentManager().findFragmentById(R.id.detalle_fragment);
+        if (detalleFragment == null) {
+            ((MainActivity) getActivity()).mostrarElementos(false);
+        }
+        super.onResume();
     }
 
     @Override
