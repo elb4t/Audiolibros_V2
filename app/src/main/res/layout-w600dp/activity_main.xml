@@ -19,9 +19,8 @@
             android:background="?attr/colorPrimary"
 
             android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:layout_scrollFlags="scroll|enterAlways"/>
-            <!-- app:popupTheme="@style/AppTheme.PopupOverlay" -->
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"/>
+        <!-- app:popupTheme="@style/AppTheme.PopupOverlay" -->
 
     </android.support.design.widget.AppBarLayout>
 
