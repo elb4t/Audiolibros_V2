@@ -1,5 +1,7 @@
 package tk.elb4t.audiolibros_V2.fragments;
 
+import android.animation.Animator;
+import android.animation.AnimatorInflater;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Fragment;
@@ -9,6 +11,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -35,7 +38,7 @@ import tk.elb4t.audiolibros_V2.R;
  * Created by eloy on 6/1/17.
  */
 
-public class SelectorFragment extends Fragment implements Animation.AnimationListener{
+public class SelectorFragment extends Fragment implements Animation.AnimationListener, Animator.AnimatorListener {
     private Activity actividad;
     private RecyclerView recyclerView;
     private AdaptadorLibrosFiltro adaptador;
@@ -59,6 +62,10 @@ public class SelectorFragment extends Fragment implements Animation.AnimationLis
         recyclerView = (RecyclerView) vista.findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new GridLayoutManager(actividad, 2));
         recyclerView.setAdapter(adaptador);
+        DefaultItemAnimator animator = new DefaultItemAnimator();
+        animator.setAddDuration(2000);
+        animator.setMoveDuration(2000);
+        recyclerView.setItemAnimator(animator);
         adaptador.setOnItemClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -83,6 +90,11 @@ public class SelectorFragment extends Fragment implements Animation.AnimationLis
                                 i.setType("text/plain");
                                 i.putExtra(Intent.EXTRA_SUBJECT, libro.titulo);
                                 i.putExtra(Intent.EXTRA_TEXT, libro.urlAudio);
+                                Animator anim = AnimatorInflater.loadAnimator(actividad,
+                                        R.animator.menguar);
+                                anim.addListener(SelectorFragment.this);
+                                anim.setTarget(v);
+                                anim.start();
                                 startActivity(Intent.createChooser(i, "Compartir"));
                                 break;
                             case 1: //Borrar
@@ -103,7 +115,8 @@ public class SelectorFragment extends Fragment implements Animation.AnimationLis
                             case 2: //Insertar
                                 int posicion = recyclerView.getChildLayoutPosition(v);
                                 adaptador.insertar((Libro) adaptador.getItem(posicion));
-                                adaptador.notifyDataSetChanged();
+                                //adaptador.notifyDataSetChanged();
+                                adaptador.notifyItemInserted(0);
                                 Snackbar.make(v, "Libro insertado", Snackbar.LENGTH_INDEFINITE).setAction("OK", new View.OnClickListener() {
                                     @Override
                                     public void onClick(View view) {
@@ -177,7 +190,7 @@ public class SelectorFragment extends Fragment implements Animation.AnimationLis
 
     @Override
     public void onAnimationStart(Animation animation) {
-        
+
     }
 
     @Override
@@ -187,6 +200,26 @@ public class SelectorFragment extends Fragment implements Animation.AnimationLis
 
     @Override
     public void onAnimationRepeat(Animation animation) {
+
+    }
+
+    @Override
+    public void onAnimationStart(Animator animation) {
+
+    }
+
+    @Override
+    public void onAnimationEnd(Animator animation) {
+
+    }
+
+    @Override
+    public void onAnimationCancel(Animator animation) {
+
+    }
+
+    @Override
+    public void onAnimationRepeat(Animator animation) {
 
     }
 }
