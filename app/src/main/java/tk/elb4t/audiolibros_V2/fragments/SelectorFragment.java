@@ -18,6 +18,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Toast;
 
 import java.util.Vector;
@@ -33,7 +35,7 @@ import tk.elb4t.audiolibros_V2.R;
  * Created by eloy on 6/1/17.
  */
 
-public class SelectorFragment extends Fragment {
+public class SelectorFragment extends Fragment implements Animation.AnimationListener{
     private Activity actividad;
     private RecyclerView recyclerView;
     private AdaptadorLibrosFiltro adaptador;
@@ -88,8 +90,12 @@ public class SelectorFragment extends Fragment {
                                         .setAction("SI", new View.OnClickListener() {
                                             @Override
                                             public void onClick(View view) {
+                                                Animation anim = AnimationUtils.loadAnimation(actividad,
+                                                        R.anim.menguar);
+                                                anim.setAnimationListener(SelectorFragment.this);
+                                                v.startAnimation(anim);
                                                 adaptador.borrar(id);
-                                                adaptador.notifyDataSetChanged();
+                                                //adaptador.notifyDataSetChanged();
                                             }
                                         })
                                         .show();
@@ -167,5 +173,20 @@ public class SelectorFragment extends Fragment {
     public void onResume() {
         ((MainActivity) getActivity()).mostrarElementos(true);
         super.onResume();
+    }
+
+    @Override
+    public void onAnimationStart(Animation animation) {
+        
+    }
+
+    @Override
+    public void onAnimationEnd(Animation animation) {
+        adaptador.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onAnimationRepeat(Animation animation) {
+
     }
 }
