@@ -32,7 +32,9 @@ import tk.elb4t.audiolibros_V2.AdaptadorLibrosFiltro;
 import tk.elb4t.audiolibros_V2.Aplicacion;
 import tk.elb4t.audiolibros_V2.Libro;
 import tk.elb4t.audiolibros_V2.MainActivity;
+import tk.elb4t.audiolibros_V2.OpenDetailClickAction;
 import tk.elb4t.audiolibros_V2.R;
+import tk.elb4t.audiolibros_V2.SearchObservable;
 
 /**
  * Created by eloy on 6/1/17.
@@ -42,7 +44,7 @@ public class SelectorFragment extends Fragment implements Animation.AnimationLis
     private Activity actividad;
     private RecyclerView recyclerView;
     private AdaptadorLibrosFiltro adaptador;
-    private Vector<Libro> vectorLibros;
+    //private Vector<Libro> vectorLibros;
 
     @Override
     public void onAttach(Context contexto) {
@@ -51,7 +53,7 @@ public class SelectorFragment extends Fragment implements Animation.AnimationLis
             this.actividad = (Activity) contexto;
             Aplicacion app = (Aplicacion) actividad.getApplication();
             adaptador = app.getAdaptador();
-            vectorLibros = app.getVectorLibros();
+            //vectorLibros = app.getVectorLibros();
         }
     }
 
@@ -66,16 +68,18 @@ public class SelectorFragment extends Fragment implements Animation.AnimationLis
         animator.setAddDuration(2000);
         animator.setMoveDuration(2000);
         recyclerView.setItemAnimator(animator);
-        adaptador.setOnItemClickListener(new View.OnClickListener() {
+        /*adaptador.setOnItemClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 ((MainActivity) actividad).mostrarDetalle(
-                        (int) adaptador.getItemId(
+                         adaptador.getItemKey(
                                 recyclerView.getChildAdapterPosition(v)));
                 Toast.makeText(actividad, "Seleccionado el elemento: "
                         + recyclerView.getChildAdapterPosition(v), Toast.LENGTH_SHORT).show();
             }
-        });
+        });*/
+        adaptador.setClickAction(new OpenDetailClickAction((MainActivity)
+                getActivity()));
         adaptador.setOnItemLongClickListener(new View.OnLongClickListener() {
             public boolean onLongClick(final View v) {
                 final int id = recyclerView.getChildAdapterPosition(v);
@@ -85,11 +89,11 @@ public class SelectorFragment extends Fragment implements Animation.AnimationLis
                     public void onClick(DialogInterface dialog, int opcion) {
                         switch (opcion) {
                             case 0: //Compartir
-                                Libro libro = vectorLibros.elementAt(id);
+                                Libro libro = ((Aplicacion) getActivity().getApplication()).getAdaptador().getItem(id);
                                 Intent i = new Intent(Intent.ACTION_SEND);
                                 i.setType("text/plain");
-                                i.putExtra(Intent.EXTRA_SUBJECT, libro.titulo);
-                                i.putExtra(Intent.EXTRA_TEXT, libro.urlAudio);
+                                i.putExtra(Intent.EXTRA_SUBJECT, libro.getTitulo());
+                                i.putExtra(Intent.EXTRA_TEXT, libro.getUrlAudio());
                                 Animator anim = AnimatorInflater.loadAnimator(actividad,
                                         R.animator.menguar);
                                 anim.addListener(SelectorFragment.this);
@@ -116,7 +120,7 @@ public class SelectorFragment extends Fragment implements Animation.AnimationLis
                                 int posicion = recyclerView.getChildLayoutPosition(v);
                                 adaptador.insertar((Libro) adaptador.getItem(posicion));
                                 //adaptador.notifyDataSetChanged();
-                                adaptador.notifyItemInserted(0);
+                                adaptador.notifyItemInserted(adaptador.getItemCount() + 1);
                                 Snackbar.make(v, "Libro insertado", Snackbar.LENGTH_INDEFINITE).setAction("OK", new View.OnClickListener() {
                                     @Override
                                     public void onClick(View view) {
@@ -140,20 +144,9 @@ public class SelectorFragment extends Fragment implements Animation.AnimationLis
         super.onCreateOptionsMenu(menu, inflater);
         MenuItem searchItem = menu.findItem(R.id.menu_buscar);
         SearchView searchView = (SearchView) searchItem.getActionView();
-        searchView.setOnQueryTextListener(
-                new SearchView.OnQueryTextListener() {
-                    @Override
-                    public boolean onQueryTextChange(String query) {
-                        adaptador.setBusqueda(query);
-                        adaptador.notifyDataSetChanged();
-                        return false;
-                    }
-
-                    @Override
-                    public boolean onQueryTextSubmit(String query) {
-                        return false;
-                    }
-                });
+        SearchObservable searchObservable = new SearchObservable();
+        searchObservable.addObserver(adaptador);
+        searchView.setOnQueryTextListener(searchObservable);
         MenuItemCompat.setOnActionExpandListener(searchItem, new MenuItemCompat.OnActionExpandListener() {
             @Override
             public boolean onMenuItemActionCollapse(MenuItem item) {
@@ -185,7 +178,14 @@ public class SelectorFragment extends Fragment implements Animation.AnimationLis
     @Override
     public void onResume() {
         ((MainActivity) getActivity()).mostrarElementos(true);
+        adaptador.activaEscuchadorLibros();
         super.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        adaptador.desactivaEscuchadorLibros();
     }
 
     @Override

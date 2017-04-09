@@ -1,11 +1,12 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.google.gms.google-services'
 
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
     defaultConfig {
-        applicationId "tk.elb4t.audiolibros"
-        minSdkVersion 14
+        applicationId "tk.elb4t.audiolibros_V2"
+        minSdkVersion 16
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -16,6 +17,9 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+    repositories {
+        maven { url 'https://maven.fabric.io/public' }
     }
 }
 
@@ -30,5 +34,9 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.1.0'
     compile 'com.android.support:design:25.1.0'
     compile 'com.android.support:recyclerview-v7:25.1.0'
-    compile 'com.google.android.gms:play-services-appindexing:8.4.0'
+    compile 'com.android.support:palette-v7:25.1.0'
+    compile 'com.firebaseui:firebase-ui-auth:1.1.1'
+    compile 'eu.the4thfloor.volley:com.android.volley:2015.05.28'
+    compile 'com.google.firebase:firebase-database:9.2.1'
+    compile 'com.firebaseui:firebase-ui-database:1.1.1'
 }

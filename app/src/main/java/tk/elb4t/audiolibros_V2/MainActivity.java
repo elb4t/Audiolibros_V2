@@ -6,10 +6,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -22,16 +22,19 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.appindexing.Thing;
+import com.android.volley.toolbox.NetworkImageView;
+import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import tk.elb4t.audiolibros_V2.fragments.DetalleFragment;
 import tk.elb4t.audiolibros_V2.fragments.SelectorFragment;
-
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -47,7 +50,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
      */
-    private GoogleApiClient client;
+    //private GoogleApiClient client;
+    private LibroSharedPreferenceStorage libroSharedPreferenceStorage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,9 +132,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+        // Nombre de usuario
+        SharedPreferences pref = getSharedPreferences("com.example.audiolibros_internal", MODE_PRIVATE);
+        String name = pref.getString("name", null);
+        View headerLayout = navigationView.getHeaderView(0);
+        TextView txtName = (TextView) headerLayout.findViewById(R.id.txtName);
+        txtName.setText(String.format(getString(R.string.welcome_message), name));
+
+        // Foto de usuario
+        /*FirebaseUser usuario = FirebaseAuth.getInstance().getCurrentUser();
+        Uri urlImagen = usuario.getPhotoUrl();
+        if (urlImagen != null) {
+            NetworkImageView fotoUsuario = (NetworkImageView)
+                    headerLayout.findViewById(R.id.imageView);
+            Aplicacion aplicacion = (Aplicacion) getApplicationContext();
+            fotoUsuario.setImageUrl(urlImagen.toString(),
+                    aplicacion.getLectorImagenes());
+        }*/
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -141,17 +159,35 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             adaptador.setGenero("");
             adaptador.notifyDataSetChanged();
         } else if (id == R.id.nav_epico) {
-            adaptador.setGenero(Libro.G_EPICO);
+            adaptador.setGenero(Libro.getgEpico());
             adaptador.notifyDataSetChanged();
         } else if (id == R.id.nav_XIX) {
-            adaptador.setGenero(Libro.G_S_XIX);
+            adaptador.setGenero(Libro.getgSXix());
             adaptador.notifyDataSetChanged();
         } else if (id == R.id.nav_suspense) {
-            adaptador.setGenero(Libro.G_SUSPENSE);
+            adaptador.setGenero(Libro.getgSuspense());
             adaptador.notifyDataSetChanged();
-        } else if (id == R.id.nav_preferencias){
+        } else if (id == R.id.nav_preferencias) {
             Intent i = new Intent(this, PreferenciasActivity.class);
             startActivity(i);
+        } else if (id == R.id.nav_signout) {
+            AuthUI.getInstance().signOut(this)
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            SharedPreferences pref = getSharedPreferences(
+                                    "com.example.audiolibros_internal", MODE_PRIVATE);
+                            pref.edit().remove("provider").commit();
+                            pref.edit().remove("email").commit();
+                            pref.edit().remove("name").commit();
+                            Intent i = new Intent(MainActivity.this, CustomLoginActivity.class);
+                            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                    | Intent.FLAG_ACTIVITY_NEW_TASK
+                                    | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(i);
+                            finish();
+                        }
+                    });
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(
                 R.id.drawer_layout);
@@ -170,7 +206,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    public void mostrarDetalle(int id) {
+    public void mostrarDetalle(String id) {
         DetalleFragment detalleFragment = (DetalleFragment)
                 getFragmentManager().findFragmentById(R.id.detalle_fragment);
         if (detalleFragment != null) {
@@ -178,7 +214,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else {
             DetalleFragment nuevoFragment = new DetalleFragment();
             Bundle args = new Bundle();
-            args.putInt(DetalleFragment.ARG_ID_LIBRO, id);
+            args.putString(DetalleFragment.ARG_ID_LIBRO, id);
             nuevoFragment.setArguments(args);
             FragmentTransaction transaccion = getFragmentManager()
                     .beginTransaction();
@@ -189,7 +225,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         SharedPreferences pref = getSharedPreferences(
                 "tk.elb4t.audiolibros_V2", MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
-        editor.putInt("ultimo", id);
+        editor.putString("ultimo", id);
         editor.commit();
     }
 
@@ -231,27 +267,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void irUltimoVisitado() {
-        SharedPreferences pref = getSharedPreferences(
-                "tk.elb4t.audiolibros_V2", MODE_PRIVATE);
-        int id = pref.getInt("ultimo", -1);
-        if (id >= 0) {
-            mostrarDetalle(id);
+        if (libroSharedPreferenceStorage.hasLastBook()) {
+            mostrarDetalle(libroSharedPreferenceStorage.getLastBook());
         } else {
             Toast.makeText(this, "Sin última vista", Toast.LENGTH_LONG).show();
         }
     }
 
-    public Action getIndexApiAction() {
-        Thing object = new Thing.Builder()
-                .setName("Main Page") // TODO: Define a title for the content shown.
-                // TODO: Make sure this auto-generated URL is correct.
-                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
-                .build();
-        return new Action.Builder(Action.TYPE_VIEW)
-                .setObject(object)
-                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
-                .build();
-    }
 
     @Override
     public void onStart() {
@@ -259,8 +281,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client.connect();
-        AppIndex.AppIndexApi.start(client, getIndexApiAction());
+        //client.connect();
     }
 
     @Override
@@ -269,8 +290,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
-        AppIndex.AppIndexApi.end(client, getIndexApiAction());
-        client.disconnect();
+        //client.disconnect();
     }
 
 

@@ -2,24 +2,28 @@ package tk.elb4t.audiolibros_V2;
 
 import android.content.Context;
 
+import com.google.firebase.database.DatabaseReference;
+
+import java.util.Observable;
+import java.util.Observer;
 import java.util.Vector;
 
 /**
  * Created by eloy on 9/1/17.
  */
 
-public class AdaptadorLibrosFiltro extends AdaptadorLibros {
-    private Vector<Libro> vectorSinFiltro;// Vector con todos los libros
+public class AdaptadorLibrosFiltro extends AdaptadorLibros implements Observer {
+    //private Vector<Libro> vectorSinFiltro;// Vector con todos los libros
     private Vector<Integer> indiceFiltro;
     private String busqueda = "";
     private String genero = "";
     private boolean novedad = false;
     private boolean leido = false;
+    private int librosUltimoFiltro;
 
     public AdaptadorLibrosFiltro(Context contexto,
-                                 Vector<Libro> vectorLibros) {
-        super(contexto, vectorLibros);
-        vectorSinFiltro = vectorLibros;
+                                 DatabaseReference reference) {
+        super(contexto, reference);
         recalculaFiltro();
     }
 
@@ -44,35 +48,61 @@ public class AdaptadorLibrosFiltro extends AdaptadorLibros {
     }
 
     public void recalculaFiltro() {
-        vectorLibros = new Vector<Libro>();
+        librosUltimoFiltro = super.getItemCount();
         indiceFiltro = new Vector<Integer>();
-        for (int i = 0; i < vectorSinFiltro.size(); i++) {
-            Libro libro = vectorSinFiltro.elementAt(i);
-            if ((libro.titulo.toLowerCase().contains(busqueda) ||
-                    libro.autor.toLowerCase().contains(busqueda)) && (libro.genero.startsWith(genero))
-                    && (!novedad || (novedad && libro.novedad))
-                    && (!leido || (leido && libro.leido))) {
-                vectorLibros.add(libro);
+        for (int i = 0; i < librosUltimoFiltro; i++) {
+            Libro libro = super.getItem(i);
+            if ((libro.getTitulo().toLowerCase().contains(busqueda) ||
+                    libro.getAutor().toLowerCase().contains(busqueda)) && (libro.getGenero().startsWith(genero))
+                    && (!novedad || (novedad && libro.getNovedad()))
+                    && (!leido || (leido /*&& libro.leido*/))) {
+//                vectorLibros.add(libro);
                 indiceFiltro.add(i);
             }
         }
     }
 
     public Libro getItem(int posicion) {
-        return vectorSinFiltro.elementAt(indiceFiltro.elementAt(posicion));
+        if (librosUltimoFiltro != super.getItemCount()) {
+            recalculaFiltro();
+        }
+        return super.getItem(indiceFiltro.elementAt(posicion));
     }
 
-    public long getItemId(int posicion) {
-        return indiceFiltro.elementAt(posicion);
+    public Libro getItemById(int id) {
+        return super.getItem(id);
+    }
+
+    public int getItemCount() {
+        if (librosUltimoFiltro != super.getItemCount()) {
+            recalculaFiltro();
+        }
+        return indiceFiltro.size();
+    }
+
+    public long getItemId(int posicion) { //Este no cambia
+        return indiceFiltro.elementAt(posicion); //Se incluye por claridad
     }
 
     public void borrar(int posicion) {
-        vectorSinFiltro.remove((int) getItemId(posicion));
+        DatabaseReference referencia=getRef(indiceFiltro.elementAt(posicion)); referencia.removeValue();
         recalculaFiltro();
     }
 
     public void insertar(Libro libro) {
-        vectorSinFiltro.add(0,libro);
+        booksReference.push().setValue(libro);
         recalculaFiltro();
     }
+
+    @Override
+    public void update(Observable observable, Object data) {
+        setBusqueda((String) data);
+        notifyDataSetChanged();
+    }
+    public String getItemKey(int posicion) {
+        if (librosUltimoFiltro != super.getItemCount()) {
+            recalculaFiltro();
+        }
+        int id = indiceFiltro.elementAt(posicion);
+        return super.getItemKey(id); }
 }

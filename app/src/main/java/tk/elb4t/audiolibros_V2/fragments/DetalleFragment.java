@@ -1,6 +1,8 @@
 package tk.elb4t.audiolibros_V2.fragments;
 
 import android.app.Fragment;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
@@ -15,6 +17,9 @@ import android.widget.MediaController;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 import tk.elb4t.audiolibros_V2.Aplicacion;
 import tk.elb4t.audiolibros_V2.Libro;
@@ -36,21 +41,21 @@ public class DetalleFragment extends Fragment implements View.OnTouchListener, M
         View vista = inflador.inflate(R.layout.fragment_detalle, contenedor, false);
         Bundle args = getArguments();
         if (args != null) {
-            int position = args.getInt(ARG_ID_LIBRO);
+            String position = args.getString(ARG_ID_LIBRO);
             ponInfoLibro(position, vista);
         } else {
-            ponInfoLibro(0, vista);
+            ponInfoLibro("0", vista);
         }
         return vista;
     }
 
-    private void ponInfoLibro(int id, View vista) {
+    private void ponInfoLibro(String id, View vista) {
         Libro libro = ((Aplicacion) getActivity().getApplication())
-                .getVectorLibros().elementAt(id);
-        ((TextView) vista.findViewById(R.id.titulo)).setText(libro.titulo);
-        ((TextView) vista.findViewById(R.id.autor)).setText(libro.autor);
+                .getAdaptador().getItemByKey (id);
+        ((TextView) vista.findViewById(R.id.titulo)).setText(libro.getTitulo());
+        ((TextView) vista.findViewById(R.id.autor)).setText(libro.getAutor());
         ((ImageView) vista.findViewById(R.id.portada))
-                .setImageResource(libro.recursoImagen);
+                .setImageBitmap(getBitmapFromURL(libro.getRecursoImagen()));
         vista.setOnTouchListener(this);
         if (mediaPlayer != null) {
             mediaPlayer.release();
@@ -58,7 +63,7 @@ public class DetalleFragment extends Fragment implements View.OnTouchListener, M
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnPreparedListener(this);
         mediaController = new MediaController(getActivity());
-        Uri audio = Uri.parse(libro.urlAudio);
+        Uri audio = Uri.parse(libro.getUrlAudio());
         try {
             mediaPlayer.setDataSource(getActivity(), audio);
             mediaPlayer.prepareAsync();
@@ -67,7 +72,7 @@ public class DetalleFragment extends Fragment implements View.OnTouchListener, M
         }
     }
 
-    public void ponInfoLibro(int id) {
+    public void ponInfoLibro(String id) {
         ponInfoLibro(id, getView());
     }
 
@@ -166,5 +171,39 @@ public class DetalleFragment extends Fragment implements View.OnTouchListener, M
     @Override
     public int getAudioSessionId() {
         return 0;
+    }
+
+    public static Bitmap getBitmapFromURL(final String src) {
+        final Bitmap[] myBitmap = new Bitmap[1];
+
+        final Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+//                    Log.e("src", src);
+                    URL url = new URL(src);
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                    connection.setDoInput(true);
+                    connection.setRequestMethod("GET");
+                    connection.connect();
+                    Log.e("-----------", "" + connection.getResponseCode());
+                    InputStream input = connection.getInputStream();
+                    myBitmap[0] = BitmapFactory.decodeStream(input);
+                    Log.e("Bitmap", "returned");
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                 //   Log.e("Exception", e.getMessage());
+                }
+            }
+        });
+        t.start();
+        try {
+            // Esperamos a que el Thread termine con la conexion para que no de error las variables con los datos
+            t.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return myBitmap[0];
     }
 }
